@@ -1,0 +1,16 @@
+BEM150 Final Project
+========================================================
+Eli Alster
+Vansh Kumar
+Angad Rekhi
+
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r fig.width=7, fig.height=6}
+plot(cars)
+```
+
