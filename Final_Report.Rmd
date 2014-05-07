@@ -1,0 +1,26 @@
+BEM150 Final Project
+========================================================
+Eli Alster
+Vansh Kumar
+Angad Rekhi
+
+     We analyzed the NYC traffic data set. In order to simplify analysis, we only considered the 2013 data so the data set would be fixed.
+  
+```{r LoadData, cache=TRUE, echo=FALSE}
+     library("plyr", lib.loc="C:\\Users\\ealster\\Documents\\R\\win-library\\3.1")
+     df = read.csv("collisions.csv", header = TRUE, sep="\t")
+     df = subset(df, year == 2013)
+```
+
+Let's plot where the collisions happened.
+
+```{r fig.width=7, fig.height=6}
+     scooter_accidents = subset(df, scooter == TRUE)
+     plot(scooter_accidents$lon, scooter_accidents$lat)
+```
+
+Which is not the shape of Manhattan! (Graphing all accidents does.)
+
+To Do:
+Visualize
+
