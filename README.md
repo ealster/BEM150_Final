@@ -1,4 +1,3 @@
-BEM150_Final
-============
+README
 
-NYC Driving Data
+To run and update: You need RStudio installed with git version control.
