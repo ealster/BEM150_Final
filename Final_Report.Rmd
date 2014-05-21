@@ -32,22 +32,24 @@ Histogram of reason for accident vs total people killed.
 ```{r}
      reasons = df[,39:68]
 
-     dataf = data.frame(matrix(nrow=4, ncol=30))
-     colnames(dataf) <- reasons
-     for (r in 1:ncol(reasons)) {
+     mat = matrix(nrow=4, ncol=ncol(reasons))
+     for ( r in 1:ncol(reasons) ) 
+     {
           reason = names(reasons)[[r]]
-          reason_row = subset(df, reason==TRUE)
+          reason_row = subset(df, df[[reason]]==TRUE)
           ped = sum(reason_row[,"pedestr_killed"])
           pass = sum(reason_row[,"passengers_killed"])
           motor = sum(reason_row[,"motorists_killed"])
           cycle = sum(reason_row[,"cyclists_killed"])
           
-          dataf$reason = c(ped, pass, motor, cycle)
+          mat[,r] = c(ped, pass, motor, cycle)
      }
 
-     barplot(as.matrix(dataf))
-```
+     par(mar=c(4,10,2,1)) # increase margins on plot 
+     par(las=2)          # align accident names horizontally
+     colors=c("blue","green","red","black")
+     barplot(mat, horiz=TRUE, names.arg=colnames(reasons), col=colors, main="2013 NYC Deaths by Kind of Accident", xlab="Number of Deaths", xlim=c(0,40), cex.names=0.5)
+     legend(x=25,y=25,fill=colors,legend=c("Pedestrians","Passengers","Motorists","Cyclists"))
+ 
 
-To Do:
-Visualize more
 
