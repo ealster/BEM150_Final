@@ -7,14 +7,14 @@ Angad Rekhi
      We analyzed the NYC traffic data set. In order to simplify analysis, we only considered the 2013 data so the data set would be fixed.
   
 ```{r LoadData, echo=FALSE, cache=TRUE}
-     library("plyr", lib.loc="C:\\Users\\ealster\\Documents\\R\\win-library\\3.1")
-     library("hexbin", lib.loc="C:\\Users\\ealster\\Documents\\R\\win-library\\3.1")
+     library("plyr")
+     library("hexbin")
      df = read.csv("collisions.csv", header = TRUE, sep="\t")
      df = subset(df, year == 2013)
      df$lat = as.numeric(as.character(df$lat))
 ```
 
-```{r fig.width=7, fig.height=6}
+```{r fig.width=7, fig.height=6, cache=TRUE}
      scooter_accidents = subset(df, scooter == TRUE)
      plot(scooter_accidents$lon, scooter_accidents$lat)
 ```
@@ -26,6 +26,27 @@ Plot of bicycle accidents.
      plot(bin)
 ```
 Accident frequency map!
+
+Histogram of reason for accident vs total people killed.
+
+```{r}
+     reasons = df[,39:68]
+
+     dataf = data.frame(matrix(nrow=4, ncol=30))
+     colnames(dataf) <- reasons
+     for (r in 1:ncol(reasons)) {
+          reason = names(reasons)[[r]]
+          reason_row = subset(df, reason==TRUE)
+          ped = sum(reason_row[,"pedestr_killed"])
+          pass = sum(reason_row[,"passengers_killed"])
+          motor = sum(reason_row[,"motorists_killed"])
+          cycle = sum(reason_row[,"cyclists_killed"])
+          
+          dataf$reason = c(ped, pass, motor, cycle)
+     }
+
+     barplot(as.matrix(dataf))
+```
 
 To Do:
 Visualize more
