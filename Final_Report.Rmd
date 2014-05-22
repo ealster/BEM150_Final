@@ -6,15 +6,20 @@ Angad Rekhi
 
      We analyzed the NYC traffic data set. In order to simplify analysis, we only considered the 2013 data so the data set would be fixed.
   
-```{r LoadData, echo=FALSE, cache=TRUE}
+```{r LoadData, echo=FALSE, cache=FALSE}
      library("plyr")
      library("hexbin")
-     install.packages('e1071', dependencies = TRUE)
+     #install.packages('e1071', dependencies = TRUE)
      library(e1071)
-     df = read.csv("collisions.csv", header = TRUE, sep="\t")
-     df = subset(df, year != 2013)
-     df$lat = as.numeric(as.character(df$lat))
-     df[is.na(df)] = 0
+     
+     # Read raw data
+     df_main = read.csv("collisions.csv", header = TRUE, sep="\t")
+
+     # Extract training and test sets and replace NA's with 0
+     df_main[is.na(df_main)] = 0
+     df_used = subset(df_main, (year == 2012 | year == 2013))
+
+     df_used$lat = as.numeric(as.character(df_used$lat))
 ```
 
 ```{r fig.width=7, fig.height=6}
@@ -63,10 +68,32 @@ Histogram of reason for accident vs total people killed.
 # x = classification matrix
 # y = factors for each type
 # scale = FALSE if just factors
-# 39:68 reason, lon, lat, 
-dataf = data.frame(df$lon, df$lat, df[,39:68], df[,22:38])
-model = svm(dataf, y = as.factor(df$total_killed), kernel = "linear", cost = .1, 
-     method = "C-classification", scale = FALSE)
+# 39:68 reason, lon, lat, 22:38 vehicle type
+
+# Separate training and test sets
+df_training = subset(df_used, year == 2012)
+df_test = subset(df_used, year == 2013)
+
+# Training Set
+#    Extract explanatory variables
+training_x = data.frame(df_training$lon, df_training$lat, df_training[,39:68], df_training[,22:38])
+#    Extract dependent variable
+training_y = as.numeric(df_training$total_killed != 0)  # note: vector, not data frame
+
+# Test Set
+#    Extract explanatory variables
+test_x = data.frame(df_test$lon, df_test$lat, df_test[,39:68], df_test[,22:38])
+#    Extract dependent variable
+test_y = as.numeric(df_test$total_killed != 0)  # note: vector, not data frame
+
+# Train SVM
+model = svm(x = training_x, y = as.factor(training_y), kernel = "linear", cost = .1, type = "C-classification", scale = FALSE)
+
+# Test SVM
+predictions = predict(model, newdata = data.frame(x = training_x), decision.values = TRUE)
+
+# Check prediction accuracy
+print(sum(test_y == predictions) / nrow(test_x))
 
 # # Testing
 # spam_test = read.csv('Spam_TestSet.csv')
