@@ -9,12 +9,15 @@ Angad Rekhi
 ```{r LoadData, echo=FALSE, cache=TRUE}
      library("plyr")
      library("hexbin")
+     install.packages('e1071', dependencies = TRUE)
+     library(e1071)
      df = read.csv("collisions.csv", header = TRUE, sep="\t")
-     df = subset(df, year == 2013)
+     df = subset(df, year != 2013)
      df$lat = as.numeric(as.character(df$lat))
+     df[is.na(df)] = 0
 ```
 
-```{r fig.width=7, fig.height=6, cache=TRUE}
+```{r fig.width=7, fig.height=6}
      scooter_accidents = subset(df, scooter == TRUE)
      plot(scooter_accidents$lon, scooter_accidents$lat)
 ```
@@ -22,14 +25,15 @@ Plot of bicycle accidents.
 
 ```{r}
      df_in = subset(df, lat < 44)
-     bin = hexbin(df_in$lon, df_in$lat, xbin=75)
-     plot(bin)
+     bin = hexbin(df_in$lon, df_in$lat, xbi=75)
+     plot(bin, main="2013 Traffic Deaths in NY by Location", xlab="Longitude", ylab="")
+     mtext(text = "Latitude", side=2, line=3)
 ```
 Accident frequency map!
 
 Histogram of reason for accident vs total people killed.
 
-```{r}
+```{r Reasons_of_Death}
      reasons = df[,39:68]
 
      mat = matrix(nrow=4, ncol=ncol(reasons))
@@ -51,5 +55,32 @@ Histogram of reason for accident vs total people killed.
      barplot(mat, horiz=TRUE, names.arg=colnames(reasons), col=colors, main="2013 NYC Deaths by Kind of Accident", xlab="Number of Deaths", xlim=c(0,40), cex.names=0.5)
      legend(x=25,y=25,fill=colors,legend=c("Pedestrians","Passengers","Motorists","Cyclists"))
  
+```
 
+``` {r Data_Munging}
+
+# Notes:
+# x = classification matrix
+# y = factors for each type
+# scale = FALSE if just factors
+# 39:68 reason, lon, lat, 
+dataf = data.frame(df$lon, df$lat, df[,39:68], df[,22:38])
+model = svm(dataf, y = as.factor(df$total_killed), kernel = "linear", cost = .1, 
+     method = "C-classification", scale = FALSE)
+
+# # Testing
+# spam_test = read.csv('Spam_TestSet.csv')
+# answers = spam_test[,1]
+# predictions = predict(model, spam_test[,-1], decision.values = TRUE)
+# 
+# # See how many were correct
+# trials = nrow(spam_test)
+# correct_amt = sum(answers == predictions)
+# correct_pct = correct_amt / trials
+# 
+# # Calculated most important words
+# var_weights = t(model[["coefs"]]) %*% model[["SV"]]
+# vocab_list = read.csv('vocab.txt', sep="\t", header = FALSE)
+
+```
 
