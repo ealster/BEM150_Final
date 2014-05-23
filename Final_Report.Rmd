@@ -22,14 +22,8 @@ Angad Rekhi
      df_used$lat = as.numeric(as.character(df_used$lat))
 ```
 
-```{r fig.width=7, fig.height=6}
-     scooter_accidents = subset(df, scooter == TRUE)
-     plot(scooter_accidents$lon, scooter_accidents$lat)
-```
-Plot of bicycle accidents.
-
 ```{r}
-     df_in = subset(df, lat < 44)
+     df_in = subset(df_used, lat < 44)
      bin = hexbin(df_in$lon, df_in$lat, xbi=75)
      plot(bin, main="2013 Traffic Deaths in NY by Location", xlab="Longitude", ylab="")
      mtext(text = "Latitude", side=2, line=3)
@@ -39,13 +33,13 @@ Accident frequency map!
 Histogram of reason for accident vs total people killed.
 
 ```{r Reasons_of_Death}
-     reasons = df[,39:68]
+     reasons = df_used[,39:68]
 
      mat = matrix(nrow=4, ncol=ncol(reasons))
      for ( r in 1:ncol(reasons) ) 
      {
           reason = names(reasons)[[r]]
-          reason_row = subset(df, df[[reason]]==TRUE)
+          reason_row = subset(df_used, df_used[[reason]]==TRUE)
           ped = sum(reason_row[,"pedestr_killed"])
           pass = sum(reason_row[,"passengers_killed"])
           motor = sum(reason_row[,"motorists_killed"])
@@ -62,7 +56,12 @@ Histogram of reason for accident vs total people killed.
  
 ```
 
-``` {r Data_Munging}
+Death Predictions
+------------------
+
+In this project, we decided to see if we could predict if people would die in an accident. This would be useful for emergency response dispatchers. Given the location of the accident and the situation in which the accident takes place, we used an svm classifier to determine whether deaths would occur. Dispatchers could use this prediction algorithm to prioritize resources.
+
+``` {r Data_Munging, eval = TRUE, cache=TRUE}
 
 # Notes:
 # x = classification matrix
@@ -83,31 +82,23 @@ training_y = as.numeric(df_training$total_killed != 0)  # note: vector, not data
 # Test Set
 #    Extract explanatory variables
 test_x = data.frame(df_test$lon, df_test$lat, df_test[,39:68], df_test[,22:38])
+test_x[is.na(test_x)] = 0
 #    Extract dependent variable
 test_y = as.numeric(df_test$total_killed != 0)  # note: vector, not data frame
+test_y[is.na(test_y)] = 0
 
 # Train SVM
 model = svm(x = training_x, y = as.factor(training_y), kernel = "linear", cost = .1, type = "C-classification", scale = FALSE)
 
 # Test SVM
-predictions = predict(model, newdata = data.frame(x = training_x), decision.values = TRUE)
+predictions = predict(model, test_x, decision.values = TRUE)
+predictions_2 = as.numeric(as.character(predictions))
 
-# Check prediction accuracy
-print(sum(test_y == predictions) / nrow(test_x))
-
-# # Testing
-# spam_test = read.csv('Spam_TestSet.csv')
-# answers = spam_test[,1]
-# predictions = predict(model, spam_test[,-1], decision.values = TRUE)
-# 
-# # See how many were correct
-# trials = nrow(spam_test)
-# correct_amt = sum(answers == predictions)
-# correct_pct = correct_amt / trials
-# 
-# # Calculated most important words
-# var_weights = t(model[["coefs"]]) %*% model[["SV"]]
-# vocab_list = read.csv('vocab.txt', sep="\t", header = FALSE)
+# See how many were correct
+trials = nrow(test_x)
+correct_amt = sum(test_y == predictions)
+correct_pct = correct_amt / trials
 
 ```
 
+The classifier is `r correct_pct*100` % accurate. We used a training set of 2012 data and a test set of 2013 accident data.
