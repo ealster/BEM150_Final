@@ -77,14 +77,14 @@ df_test = subset(df_used, year == 2013)
 #    Extract explanatory variables
 training_x = data.frame(df_training$lon, df_training$lat, df_training[,39:68], df_training[,22:38])
 #    Extract dependent variable
-training_y = as.numeric(df_training$total_killed != 0)  # note: vector, not data frame
+training_y = as.numeric(df_training$total_injured != 0)  # note: vector, not data frame
 
 # Test Set
 #    Extract explanatory variables
 test_x = data.frame(df_test$lon, df_test$lat, df_test[,39:68], df_test[,22:38])
 test_x[is.na(test_x)] = 0
 #    Extract dependent variable
-test_y = as.numeric(df_test$total_killed != 0)  # note: vector, not data frame
+test_y = as.numeric(df_test$total_injured != 0)  # note: vector, not data frame
 test_y[is.na(test_y)] = 0
 
 # Train SVM
