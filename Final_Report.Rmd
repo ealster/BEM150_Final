@@ -130,3 +130,4 @@ predictions_linear = training_xm1 %*% model_linear$coefficients
 # correct_amt = sum(test_y == predictions)
 # correct_pct = correct_amt / trials
 ```
+hi
