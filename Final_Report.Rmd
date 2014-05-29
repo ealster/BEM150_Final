@@ -22,7 +22,7 @@ Angad Rekhi
      df_used$lat = as.numeric(as.character(df_used$lat))
 ```
 
-```{r}
+```{r accident_plot, error=TRUE, cache=TRUE}
      df_in = subset(df_used, lat < 44)
      bin = hexbin(df_in$lon, df_in$lat, xbi=75)
      plot(bin, main="2013 Traffic Deaths in NY by Location", xlab="Longitude", ylab="")
@@ -32,7 +32,7 @@ Accident frequency map!
 
 Histogram of reason for accident vs total people killed.
 
-```{r Reasons_of_Death}
+```{r Reasons_of_Death, cache=TRUE, error=TRUE}
      reasons = df_used[,39:68]
 
      mat = matrix(nrow=4, ncol=ncol(reasons))
@@ -102,3 +102,31 @@ correct_pct = correct_amt / trials
 ```
 
 The classifier is `r correct_pct*100` % accurate. We used a training set of 2012 data and a test set of 2013 accident data.
+
+```{r linear_regression, error=TRUE}
+
+# Training Set
+# 
+# training_x is a data.frame
+# Includes: df_training$lon, df_training$lat, df_training[,39:68], df_training[,22:38]
+# Those other columns are: type of vehicle and reason listed for accident
+# training_y numeric vector is boolean indicator for injury
+# 
+# Similary for test_x, test_y
+
+# Simple Linear Model
+training_xm = as.matrix(training_x)
+model_linear = lm(training_y ~ training_xm)
+# NOTE!!!: This gives 9! problematic variables with give coefficients of NA.
+model_linear$coefficients[is.na(model_linear$coefficients)] = 0
+
+
+# Test Linear
+training_xm1 = cbind(rep(x = 1, times = nrow(training_x)), training_xm) #add 1 column
+predictions_linear = training_xm1 %*% model_linear$coefficients
+
+# See how many were correct
+# trials = nrow(test_xm1)
+# correct_amt = sum(test_y == predictions)
+# correct_pct = correct_amt / trials
+```
