@@ -73,11 +73,18 @@ In this project, we decided to see if we could predict if people would die in an
 df_training = subset(df_used, year == 2012)
 df_test = subset(df_used, year == 2013)
 
+# Make training set more balanced
+# About 3/4 of the accidents had no injuries; so for each accident, delete it with probability 2/3 to roughly balance the training set
+random = runif(nrow(df_training), 0, 1)
+df_training = df_training[!(df_training$total_injured==0 & random<2/3),]
+
 # Training Set
 #    Extract explanatory variables
 training_x = data.frame(df_training$lon, df_training$lat, df_training[,39:68], df_training[,22:38])
 #    Extract dependent variable
 training_y = as.numeric(df_training$total_injured != 0)  # note: vector, not data frame
+
+# Make training set more balanced 
 
 # Test Set
 #    Extract explanatory variables
@@ -98,6 +105,7 @@ predictions_2 = as.numeric(as.character(predictions))
 trials = nrow(test_x)
 correct_amt = sum(test_y == predictions)
 correct_pct = correct_amt / trials
+print(correct_pct)
 
 ```
 
@@ -112,22 +120,63 @@ The classifier is `r correct_pct*100` % accurate. We used a training set of 2012
 # Those other columns are: type of vehicle and reason listed for accident
 # training_y numeric vector is boolean indicator for injury
 # 
-# Similary for test_x, test_y
+# Similarly for test_x, test_y
 
 # Simple Linear Model
 training_xm = as.matrix(training_x)
+#training_xm1 = cbind(rep(x = 1, times = nrow(training_x)), training_xm) #add 1 column
 model_linear = lm(training_y ~ training_xm)
-# NOTE!!!: This gives 9! problematic variables with give coefficients of NA.
+# NOTE!!!: This gives 9 problematic variables which give coefficients of NA.
 model_linear$coefficients[is.na(model_linear$coefficients)] = 0
 
+# To get threshold value, find midpoint of min and max of training-x
+training_xm1 = cbind(rep(x = 1, times = nrow(training_xm)), training_xm)
+predictions_training = training_xm1 %*% model_linear$coefficients
+thresh = mean(c(min(predictions_training), max(predictions_training)))
 
 # Test Linear
-training_xm1 = cbind(rep(x = 1, times = nrow(training_x)), training_xm) #add 1 column
-predictions_linear = training_xm1 %*% model_linear$coefficients
+test_x_mat = as.matrix(test_x)
+test_x_mat = cbind(rep(x = 1, times = nrow(test_x_mat)), test_x_mat) # add column of ones
+predictions_linear = test_x_mat %*% model_linear$coefficients
+
+# Convert regression results to actual predictions
+predictions = as.numeric(predictions_linear > thresh)
 
 # See how many were correct
-# trials = nrow(test_xm1)
-# correct_amt = sum(test_y == predictions)
-# correct_pct = correct_amt / trials
+trials = length(predictions)
+correct_amt = sum(test_y == predictions)
+correct_pct = correct_amt / trials
+print(correct_pct)
 ```
-hi
+
+```{r Neural Net}
+
+#install.packages("neuralnet", dependencies=TRUE)
+library("neuralnet")
+
+# Training Set
+#    Extract explanatory variables
+NN_training_x = training_x
+#    Extract dependent variable
+NN_training_y = data.frame(training_y)# note: vector, not data frame
+colnames(NN_training_y) <- "y"
+train = cbind(NN_training_y, NN_training_x)
+
+# Test Set
+#    Extract explanatory variables
+NN_test_x = test_x
+#    Extract dependent variable
+NN_test_y = data.frame(test_y)
+test = cbind(NN_test_y, NN_test_x)
+
+# Create formula that describes our neural net and train it
+n <- names(train)
+f <- as.formula(paste("y ~", paste(n[!n %in% "y"], collapse = " + ")))
+NN = neuralnet(f, data = train)
+
+# Compute results of the neural network on our test data
+results <- compute(NN, data.frame(test))
+ls(results)
+print(results$net.result)
+
+```
